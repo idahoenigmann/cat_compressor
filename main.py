@@ -8,7 +8,8 @@ from PIL import Image
 import atexit
 import os.path
 
-NEW_MODEL = True
+NEW_MODEL = False
+LOOP = True
 
 origin = 'file:///home/ida/.keras/datasets/cat10-dataset.zip'
 fname = 'cat10-dataset'
@@ -65,21 +66,24 @@ def main():
             keras.layers.Reshape([500, 375, 1]),
         ])
     else:
+        print("Using trained model 'model.h5'!")
         model = keras.models.load_model('model.h5')
 
     print(model.summary())
 
     data = load_images()
 
-    model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
+    model.compile(metrics=[keras.metrics.mean_absolute_error],
                   loss=keras.losses.mean_absolute_percentage_error,
-                  optimizer=keras.optimizers.SGD())
+                  optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True))
 
-    model.fit(data, data, batch_size=100, epochs=10000)
+    while True:
+        model.fit(data, data, batch_size=100, epochs=1000)
+        model.save('model.h5')
+        make_prediction(model, data[0])
 
-    model.save('model.h5')
-
-    make_prediction(model, data[0])
+        if not LOOP:
+            break
 
 
 if __name__ == '__main__':
