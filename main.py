@@ -15,8 +15,8 @@ origin = 'file:///home/ida/.keras/datasets/cat10-dataset.zip'
 fname = 'cat10-dataset'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 64
-IMG_HEIGHT = 64
+IMG_WIDTH = 128
+IMG_HEIGHT = 128
 
 
 def exit_handler():
@@ -59,41 +59,29 @@ def main():
         model = keras.Sequential([
             keras.layers.Conv2D(10, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 1],
                                 data_format='channels_last', padding='same', activation=keras.activations.relu),
-            keras.layers.Activation(keras.activations.sigmoid),
             keras.layers.MaxPool2D(),
 
             keras.layers.Conv2D(50, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.Activation(keras.activations.sigmoid),
             keras.layers.MaxPool2D(),
 
             keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.Activation(keras.activations.sigmoid),
             keras.layers.MaxPool2D(),
 
             keras.layers.Conv2D(200, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.Activation(keras.activations.sigmoid),
 
             keras.layers.Flatten(),
-
-            keras.layers.Dense(12800),
-
-            keras.layers.Reshape([8, 8, 200]),
+            keras.layers.Reshape([16, 16, 200]),
 
             keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.Activation(keras.activations.sigmoid),
 
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
             keras.layers.Conv2D(50, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.Activation(keras.activations.sigmoid),
 
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
             keras.layers.Conv2D(10, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.Activation(keras.activations.sigmoid),
 
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-            keras.layers.Conv2D(1, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.Activation(keras.activations.sigmoid),
-
+            keras.layers.Conv2D(1, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu)
         ])
     else:
         print("Using trained model 'model.h5'!")
@@ -103,23 +91,26 @@ def main():
 
     data = load_images()
 
-    model.compile(metrics=[keras.metrics.mean_absolute_error],
-                  loss=keras.losses.mean_absolute_percentage_error,
-                  optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.5, nesterov=True))
+    model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
+                  loss=keras.losses.mean_absolute_error,
+                  optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
+    history_all = []
     while True:
-        history = model.fit(data, data, batch_size=50, epochs=100)
+        history = model.fit(data, data, batch_size=50, epochs=100, shuffle=True)
         model.save('model.h5')
 
+        history_all = np.concatenate((history_all, history.history['loss']))
+
         # Plot training & validation loss values
-        plt.plot(history.history['loss'])
+        plt.plot(np.ravel(history_all))
         plt.title('Model loss')
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
         plt.legend(['Train'], loc='upper left')
         plt.show()
 
-        make_prediction(model, data[0])
+        make_prediction(model, data[-1])
 
         if not LOOP:
             break
