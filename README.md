@@ -1,4 +1,3 @@
 # cat_compressor
-compressing (images of) cats for science *no cats have been harmed*
-
-To be honest it should in theory compress images of all sort, not just cat images.
+This projects goal is to compress images using a neural network.
+By structuring the neural network in such a way that it recieves 

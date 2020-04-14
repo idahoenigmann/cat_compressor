@@ -7,6 +7,8 @@ from PIL import Image
 import atexit
 import os.path
 import matplotlib.pyplot as plt
+from keras.datasets import mnist
+import random
 
 NEW_MODEL = False
 LOOP = True
@@ -15,8 +17,8 @@ origin = 'file:///home/ida/.keras/datasets/cat10-dataset.zip'
 fname = 'cat10-dataset'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 128
-IMG_HEIGHT = 128
+IMG_WIDTH = 28
+IMG_HEIGHT = 28
 
 
 def exit_handler():
@@ -24,7 +26,7 @@ def exit_handler():
 
 
 def load_images():
-    data_dir = tf.keras.utils.get_file(
+    """data_dir = tf.keras.utils.get_file(
         origin=origin,
         fname=fname, untar=True)
     data_dir = pathlib.Path(data_dir)
@@ -35,8 +37,16 @@ def load_images():
         img = np.array(img)
         img = img.reshape((IMG_WIDTH, IMG_HEIGHT, -1))
         img = img / 255.0
-        images.append(img)
-    return np.array(images)
+        images.append(img)"""
+
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+    x_train = np.array(x_train)
+    x_train = x_train.reshape((-1, IMG_WIDTH, IMG_HEIGHT, 1))
+    x_train = x_train / 255.0
+
+    # return np.array(images)
+    return x_train
 
 
 def make_prediction(model, img):
@@ -59,22 +69,22 @@ def main():
         model = keras.Sequential([
             keras.layers.Conv2D(10, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 1],
                                 data_format='channels_last', padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(),
+            keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
             keras.layers.Conv2D(50, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(),
+            keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
             keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(),
+            #keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
-            keras.layers.Conv2D(200, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            #keras.layers.Conv2D(200, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
             keras.layers.Flatten(),
-            keras.layers.Reshape([16, 16, 200]),
+            keras.layers.Reshape([7, 7, 100]),
 
-            keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            #keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
-            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
+            #keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
             keras.layers.Conv2D(50, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
@@ -82,6 +92,7 @@ def main():
 
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
             keras.layers.Conv2D(1, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu)
+
         ])
     else:
         print("Using trained model 'model.h5'!")
@@ -97,7 +108,7 @@ def main():
 
     history_all = []
     while True:
-        history = model.fit(data, data, batch_size=50, epochs=100, shuffle=True)
+        history = model.fit(data, data, batch_size=50, epochs=1, shuffle=True)
         model.save('model.h5')
 
         history_all = np.concatenate((history_all, history.history['loss']))
@@ -108,9 +119,9 @@ def main():
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
         plt.legend(['Train'], loc='upper left')
-        plt.show()
+        # plt.show()
 
-        make_prediction(model, data[-1])
+        #make_prediction(model, data[random.randint(0, len(data) - 1)])
 
         if not LOOP:
             break

@@ -5,7 +5,7 @@ import numpy as np
 from main import IMG_WIDTH, IMG_HEIGHT
 
 if __name__ == '__main__':
-    img_idx = 0
+    img_idx = 14286
 
     model = keras.models.load_model('model.h5')
 
