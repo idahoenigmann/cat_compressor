@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from keras.datasets import mnist
 import random
 
-NEW_MODEL = False
+NEW_MODEL = True
 LOOP = True
 
 origin = 'file:///home/ida/.keras/datasets/cat10-dataset.zip'
@@ -25,28 +25,30 @@ def exit_handler():
     model.save('model.h5')
 
 
-def load_images():
-    """data_dir = tf.keras.utils.get_file(
-        origin=origin,
-        fname=fname, untar=True)
-    data_dir = pathlib.Path(data_dir)
+def load_images(a=False, a_len=9993):
+    if a:
+        data_dir = tf.keras.utils.get_file(
+            origin=origin,
+            fname=fname, untar=True)
+        data_dir = pathlib.Path(data_dir)
 
-    images = []
-    for file in list(data_dir.glob('*.jpg'))[0:100]:
-        img = load_img(file.as_posix(), color_mode="grayscale", target_size=(IMG_WIDTH, IMG_HEIGHT))
-        img = np.array(img)
-        img = img.reshape((IMG_WIDTH, IMG_HEIGHT, -1))
-        img = img / 255.0
-        images.append(img)"""
+        images = []
+        for file in list(data_dir.glob('*.jpg'))[0:a_len]:
+            img = load_img(file.as_posix(), color_mode="grayscale", target_size=(IMG_WIDTH, IMG_HEIGHT))
+            img = np.array(img)
+            img = img.reshape((IMG_WIDTH, IMG_HEIGHT, -1))
+            img = img / 255.0
+            images.append(img)
 
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+        return np.array(images)
+    else:
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-    x_train = np.array(x_train)
-    x_train = x_train.reshape((-1, IMG_WIDTH, IMG_HEIGHT, 1))
-    x_train = x_train / 255.0
+        x_train = np.array(x_train)
+        x_train = x_train.reshape((-1, IMG_WIDTH, IMG_HEIGHT, 1))
+        x_train = x_train / 255.0
 
-    # return np.array(images)
-    return x_train
+        return x_train
 
 
 def make_prediction(model, img):
@@ -75,16 +77,18 @@ def main():
             keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
             keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            #keras.layers.MaxPool2D(pool_size=2, padding='same'),
+            keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
-            #keras.layers.Conv2D(200, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            keras.layers.Conv2D(200, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
-            keras.layers.Flatten(),
-            keras.layers.Reshape([7, 7, 100]),
+            keras.layers.Reshape([4 * 4 * 200]),
+            keras.layers.Dense(4 * 4),
+            keras.layers.Dense(4 * 4 * 200),
+            keras.layers.Reshape([4, 4, 200]),
 
-            #keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
-            #keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
+            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
             keras.layers.Conv2D(50, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
