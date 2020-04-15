@@ -59,7 +59,7 @@ def make_prediction(model, img):
     output *= 255
 
     pil_img = Image.fromarray(output)
-    pil_img.convert('RGB').show()
+    pil_img.show()
 
 
 def main():
