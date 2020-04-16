@@ -8,10 +8,13 @@ import tensorflow as tf
 import pathlib
 import os.path
 import matplotlib.pyplot as plt
+import atexit
+import random
 
 LOOP = True
-IMG_WIDTH = 100
-IMG_HEIGHT = 100
+IMG_WIDTH = 64
+IMG_HEIGHT = 64
+BATCH_SIZE = 200
 
 origin = 'file:///home/ida/.keras/datasets/cat-dataset.zip'
 fname = 'cat-dataset'
@@ -22,7 +25,7 @@ def exit_handler():
     model.save('model_cat_classifier.h5')
 
 
-def load_images(len=9993):
+def load_images(len=50):
     data_dir = tf.keras.utils.get_file(
         origin=origin,
         fname=fname, untar=True)
@@ -30,38 +33,51 @@ def load_images(len=9993):
 
     images = []
     labels = []
-    for file in list(data_dir.glob('*.jpg'))[0:len]:
+
+    cats = 0
+    non_cats = 0
+
+    all_files = list(data_dir.glob('*.jpg'))
+    random.shuffle(all_files)
+
+    for file in all_files[0:len]:
+        # print(file)
         img = load_img(file.as_posix(), color_mode="grayscale", target_size=(IMG_WIDTH, IMG_HEIGHT))
         img = np.array(img)
         img = img.reshape((IMG_WIDTH, IMG_HEIGHT, -1))
         img = img / 255.0
         images.append(img)
 
-        if file.name.find('/cat_'):
+        if 'cat_' in file.as_posix().split("/")[-1]:
             labels.append([1])
+            cats += 1
         else:
             labels.append([0])
+            non_cats += 1
+
+    print("cats: {}".format(cats))
+    print("non cats: {}".format(non_cats))
 
     return (np.array(images), np.array(labels))
 
 
 if __name__ == '__main__':
-    data, label = load_images(500)
-
-    print(data.shape)
-    print(label.shape)
+    atexit.register(exit_handler)
 
     if not os.path.isfile('model_cat_classifier.h5'):
         model = keras.Sequential([
-            keras.layers.Conv2D(10, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 1],
-                                data_format='channels_last', padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(pool_size=2, padding='same'),
+            keras.layers.Conv2D(32, kernel_size=(3, 3), strides=1, padding='same', input_shape=[IMG_WIDTH, IMG_HEIGHT, 1],
+                                data_format='channels_last', activation=keras.activations.relu),
+            keras.layers.MaxPool2D(pool_size=(2, 2)),
 
-            keras.layers.Conv2D(50, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(pool_size=2, padding='same'),
+            keras.layers.Conv2D(32, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            keras.layers.MaxPool2D(pool_size=(2, 2)),
 
-            keras.layers.Reshape([25 * 25 * 50]),
-            keras.layers.Dense(50),
+            keras.layers.Flatten(),
+            keras.layers.Dense(128, activation=keras.activations.relu),
+            keras.layers.Dropout(0.5),
+            keras.layers.Dense(128, activation=keras.activations.relu),
+            keras.layers.Dropout(0.5),
             keras.layers.Dense(1, activation=keras.activations.sigmoid)
         ])
     else:
@@ -70,23 +86,40 @@ if __name__ == '__main__':
 
     print(model.summary())
 
-    model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
-                  loss=keras.losses.mean_absolute_error,
-                  optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
+    model.compile(metrics=[keras.metrics.accuracy],
+                  loss=keras.losses.binary_crossentropy,
+                  optimizer=keras.optimizers.rmsprop())
 
-    history_all = []
+    history_loss_all = []
+    history_accuracy_all = []
     while True:
-        history = model.fit(data, label, batch_size=50, epochs=1, shuffle=True, validation_split=0.1)
+        data, label = load_images(BATCH_SIZE)
+
+        history = model.fit(data, label, batch_size=BATCH_SIZE, epochs=50, shuffle=True)
         model.save('model_cat_classifier.h5')
 
-        history_all = np.concatenate((history_all, history.history['loss']))
+        history_loss_all.append(np.average(history.history['loss']))
+
+        history_accuracy_all.append(np.average(history.history['accuracy']))
+        # history_accuracy_all = np.concatenate((history_accuracy_all, history.history['accuracy']))
 
         # Plot training & validation loss values
-        plt.plot(np.ravel(history_all))
-        plt.title('Model loss')
-        plt.ylabel('Loss')
-        plt.xlabel('Epoch')
-        plt.legend(['Train'], loc='upper left')
+        fig, ax1 = plt.subplots()
+
+        color = 'tab:red'
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Loss', color=color)
+        ax1.plot(np.ravel(history_loss_all), color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+
+        ax2 = ax1.twinx()
+
+        color = 'tab:blue'
+        ax2.set_ylabel('Accuracy', color=color)
+        ax2.plot(np.ravel(history_accuracy_all), color=color)
+        ax2.tick_params(axis='y', labelcolor=color)
+
+        fig.tight_layout()
         plt.show()
 
         if not LOOP:
