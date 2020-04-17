@@ -9,6 +9,7 @@ from keras.preprocessing.image import load_img
 from matplotlib.patches import Circle
 import math
 from scipy import ndimage, misc
+import threading
 
 
 origin = 'file:///home/ida/.keras/datasets/cat-dataset.zip'
@@ -16,6 +17,8 @@ fname = 'cat-dataset'
 
 IMG_HEIGHT = 0
 IMG_WIDTH = 0
+
+lock = threading.Lock()
 
 
 def load_data(start, end):
@@ -33,7 +36,8 @@ def load_data(start, end):
     print("loading {} out of {} images".format(end - start, len(list(data_dir.glob('*/*/*.jpg')))))
 
     for file in list(data_dir.glob('*/*/*.jpg'))[start:end]:
-        img = load_img(file.as_posix(), color_mode="rgb")
+        with lock:
+            img = load_img(file.as_posix(), color_mode="rgb")
         img = np.array(img)
 
         IMG_WIDTH = img.shape[0]
@@ -51,13 +55,14 @@ def load_data(start, end):
 
 
 def plot_image(image, name=""):
-    plt.imshow(image)
-    plt.axis('off')
-    plt.tight_layout()
-    if name != "":
-        plt.savefig("/home/ida/.keras/datasets/cat_faces/{}".format(name))
-    else:
-        plt.show()
+    with lock:
+        plt.imshow(image)
+        plt.axis('off')
+        plt.tight_layout()
+        if name != "":
+            plt.savefig("/home/ida/.keras/datasets/cat_faces/{}".format(name))
+        else:
+            plt.show()
 
 
 def crop_face(image, label):
@@ -96,11 +101,25 @@ def crop_face(image, label):
     return image
 
 
-if __name__ == '__main__':
-    i = 0
-    for y in range(0, 9990, 10):
-        images, labels = load_data(y, y + 10)
+def crop_and_save_images(start, end, step):
+    i = start
+    for y in range(start, end, step):
+        images, labels = load_data(y, y + step)
         for x in range(len(images)):
             images[x] = crop_face(images[x], labels[x])
             plot_image(images[x], "{:05d}.jpg".format(i))
             i += 1
+
+
+if __name__ == '__main__':
+    threads = []
+
+    k = 901
+    for i in range(0, 4):
+        t = threading.Thread(target=crop_and_save_images, args=(k, min(k + 500, 9990), 10))
+        t.start()
+        threads.append(t)
+        k += 500
+
+    for t in threads:
+        t.join()
