@@ -22,7 +22,7 @@ IMG_HEIGHT = 28
 
 
 def exit_handler():
-    model.save('model.h5')
+    model.save('model_cat_classifier.h5')
 
 
 def load_images(a=False, a_len=9993):
@@ -67,7 +67,7 @@ def make_prediction(model, img):
 def main():
     global model
 
-    if NEW_MODEL or (not os.path.isfile('model.h5')):
+    if NEW_MODEL or (not os.path.isfile('model_cat_classifier.h5')):
         model = keras.Sequential([
             keras.layers.Conv2D(10, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 1],
                                 data_format='channels_last', padding='same', activation=keras.activations.relu),
@@ -99,8 +99,8 @@ def main():
 
         ])
     else:
-        print("Using trained model 'model.h5'!")
-        model = keras.models.load_model('model.h5')
+        print("Using trained model 'model_cat_classifier.h5'!")
+        model = keras.models.load_model('model_cat_classifier.h5')
 
     print(model.summary())
 
@@ -113,7 +113,7 @@ def main():
     history_all = []
     while True:
         history = model.fit(data, data, batch_size=50, epochs=1, shuffle=True)
-        model.save('model.h5')
+        model.save('model_cat_classifier.h5')
 
         history_all = np.concatenate((history_all, history.history['loss']))
 

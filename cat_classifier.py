@@ -1,126 +1,134 @@
-import keras
-from PIL import Image
-import numpy as np
-from main import IMG_WIDTH, IMG_HEIGHT
-import time
-from keras.preprocessing.image import load_img
 import tensorflow as tf
-import pathlib
-import os.path
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+import os
+import numpy as np
 import matplotlib.pyplot as plt
-import atexit
-import random
 
-LOOP = True
-IMG_WIDTH = 64
-IMG_HEIGHT = 64
-BATCH_SIZE = 200
+batch_size = 128
+epochs = 100
+IMG_HEIGHT = 150
+IMG_WIDTH = 150
 
-origin = 'file:///home/ida/.keras/datasets/cat-dataset.zip'
-fname = 'cat-dataset'
-model = keras.models.Sequential()
+_URL = 'https://storage.googleapis.com/mledu-datasets/cats_and_dogs_filtered.zip'
+path_to_zip = tf.keras.utils.get_file('cats_and_dogs.zip', origin=_URL, extract=True)
+PATH = os.path.join(os.path.dirname(path_to_zip), 'cats_and_dogs_filtered')
 
 
-def exit_handler():
-    model.save('model_cat_classifier.h5')
-
-
-def load_images(len=50):
-    data_dir = tf.keras.utils.get_file(
-        origin=origin,
-        fname=fname, untar=True)
-    data_dir = pathlib.Path(data_dir)
-
-    images = []
-    labels = []
-
-    cats = 0
-    non_cats = 0
-
-    all_files = list(data_dir.glob('*.jpg'))
-    random.shuffle(all_files)
-
-    for file in all_files[0:len]:
-        # print(file)
-        img = load_img(file.as_posix(), color_mode="grayscale", target_size=(IMG_WIDTH, IMG_HEIGHT))
-        img = np.array(img)
-        img = img.reshape((IMG_WIDTH, IMG_HEIGHT, -1))
-        img = img / 255.0
-        images.append(img)
-
-        if 'cat_' in file.as_posix().split("/")[-1]:
-            labels.append([1])
-            cats += 1
-        else:
-            labels.append([0])
-            non_cats += 1
-
-    print("cats: {}".format(cats))
-    print("non cats: {}".format(non_cats))
-
-    return (np.array(images), np.array(labels))
+# This function will plot images in the form of a grid with 1 row and 5 columns where images are placed in each column.
+def plotImages(images_arr):
+    fig, axes = plt.subplots(1, 5, figsize=(20,20))
+    axes = axes.flatten()
+    for img, ax in zip( images_arr, axes):
+        ax.imshow(img)
+        ax.axis('off')
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == '__main__':
-    atexit.register(exit_handler)
+    train_dir = os.path.join(PATH, 'train')
+    validation_dir = os.path.join(PATH, 'validation')
 
-    if not os.path.isfile('model_cat_classifier.h5'):
-        model = keras.Sequential([
-            keras.layers.Conv2D(32, kernel_size=(3, 3), strides=1, padding='same', input_shape=[IMG_WIDTH, IMG_HEIGHT, 1],
-                                data_format='channels_last', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(pool_size=(2, 2)),
+    train_cats_dir = os.path.join(train_dir, 'cats')  # directory with our training cat pictures
+    train_dogs_dir = os.path.join(train_dir, 'dogs')  # directory with our training dog pictures
+    validation_cats_dir = os.path.join(validation_dir, 'cats')  # directory with our validation cat pictures
+    validation_dogs_dir = os.path.join(validation_dir, 'dogs')  # directory with our validation dog pictures
 
-            keras.layers.Conv2D(32, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(pool_size=(2, 2)),
+    num_cats_tr = len(os.listdir(train_cats_dir))
+    num_dogs_tr = len(os.listdir(train_dogs_dir))
 
-            keras.layers.Flatten(),
-            keras.layers.Dense(128, activation=keras.activations.relu),
-            keras.layers.Dropout(0.5),
-            keras.layers.Dense(128, activation=keras.activations.relu),
-            keras.layers.Dropout(0.5),
-            keras.layers.Dense(1, activation=keras.activations.sigmoid)
-        ])
-    else:
-        print("Using trained model 'model_cat_classifier.h5'!")
-        model = keras.models.load_model('model_cat_classifier.h5')
+    num_cats_val = len(os.listdir(validation_cats_dir))
+    num_dogs_val = len(os.listdir(validation_dogs_dir))
 
-    print(model.summary())
+    total_train = num_cats_tr + num_dogs_tr
+    total_val = num_cats_val + num_dogs_val
 
-    model.compile(metrics=[keras.metrics.accuracy],
-                  loss=keras.losses.binary_crossentropy,
-                  optimizer=keras.optimizers.rmsprop())
+    print('total training cat images:', num_cats_tr)
+    print('total training dog images:', num_dogs_tr)
 
-    history_loss_all = []
-    history_accuracy_all = []
-    while True:
-        data, label = load_images(BATCH_SIZE)
+    print('total validation cat images:', num_cats_val)
+    print('total validation dog images:', num_dogs_val)
+    print("--")
+    print("Total training images:", total_train)
+    print("Total validation images:", total_val)
 
-        history = model.fit(data, label, batch_size=BATCH_SIZE, epochs=50, shuffle=True)
-        model.save('model_cat_classifier.h5')
+    train_image_generator = ImageDataGenerator(rescale=1. / 255,
+                                               horizontal_flip=True,
+                                               rotation_range=45,
+                                               zoom_range=0.5,
+                                               width_shift_range=0.15,
+                                               height_shift_range=0.15)  # Generator for our training data
+    validation_image_generator = ImageDataGenerator(rescale=1. / 255,
+                                                    horizontal_flip=True,
+                                                    rotation_range=45,
+                                                    zoom_range=0.5,
+                                                    width_shift_range=0.15,
+                                                    height_shift_range=0.15)  # Generator for our validation data
 
-        history_loss_all.append(np.average(history.history['loss']))
+    train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
+                                                               directory=train_dir,
+                                                               shuffle=True,
+                                                               target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                               class_mode='binary')
 
-        history_accuracy_all.append(np.average(history.history['accuracy']))
-        # history_accuracy_all = np.concatenate((history_accuracy_all, history.history['accuracy']))
+    val_data_gen = validation_image_generator.flow_from_directory(batch_size=batch_size,
+                                                                  directory=validation_dir,
+                                                                  target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                                  class_mode='binary')
 
-        # Plot training & validation loss values
-        fig, ax1 = plt.subplots()
+    sample_training_images, _ = next(train_data_gen)
+    # plotImages(sample_training_images[:5])
 
-        color = 'tab:red'
-        ax1.set_xlabel('Epoch')
-        ax1.set_ylabel('Loss', color=color)
-        ax1.plot(np.ravel(history_loss_all), color=color)
-        ax1.tick_params(axis='y', labelcolor=color)
+    model = Sequential([
+        Conv2D(16, 3, padding='same', activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)),
+        MaxPooling2D(),
+        Conv2D(32, 3, padding='same', activation='relu'),
+        MaxPooling2D(),
+        Conv2D(64, 3, padding='same', activation='relu'),
+        MaxPooling2D(),
+        Dropout(0.2),
+        Flatten(),
+        Dense(512, activation='relu'),
+        Dense(1)
+    ])
 
-        ax2 = ax1.twinx()
+    model.compile(optimizer='adam',
+                  loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+                  metrics=['accuracy'])
 
-        color = 'tab:blue'
-        ax2.set_ylabel('Accuracy', color=color)
-        ax2.plot(np.ravel(history_accuracy_all), color=color)
-        ax2.tick_params(axis='y', labelcolor=color)
+    model.summary()
 
-        fig.tight_layout()
-        plt.show()
+    history = model.fit(
+        train_data_gen,
+        steps_per_epoch=total_train // batch_size,
+        epochs=epochs,
+        validation_data=val_data_gen,
+        validation_steps=total_val // batch_size
+    )
 
-        if not LOOP:
-            break
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    epochs_range = range(epochs)
+
+    plt.figure(figsize=(8, 8))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, acc, label='Training Accuracy')
+    plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+    plt.legend(loc='lower right')
+    plt.title('Training and Validation Accuracy')
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, loss, label='Training Loss')
+    plt.plot(epochs_range, val_loss, label='Validation Loss')
+    plt.legend(loc='upper right')
+    plt.title('Training and Validation Loss')
+    plt.show()
+

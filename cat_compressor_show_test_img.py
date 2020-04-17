@@ -1,8 +1,8 @@
 import keras
-from main import load_images, make_prediction
+from cat_compressor import load_images, make_prediction
 from PIL import Image
 import numpy as np
-from main import IMG_WIDTH, IMG_HEIGHT
+from cat_compressor import IMG_WIDTH, IMG_HEIGHT
 import time
 
 if __name__ == '__main__':
