@@ -63,6 +63,7 @@ def plot_image(image, name=""):
             plt.savefig("/home/ida/.keras/datasets/cat_faces/{}".format(name))
         else:
             plt.show()
+        plt.clf()
 
 
 def crop_face(image, label):
@@ -114,12 +115,14 @@ def crop_and_save_images(start, end, step):
 if __name__ == '__main__':
     threads = []
 
-    k = 901
-    for i in range(0, 4):
-        t = threading.Thread(target=crop_and_save_images, args=(k, min(k + 500, 9990), 10))
+    not_working = [2107, 3288, 6465, 6899, 9068]
+
+    k = 0
+    for i in range(0, 10):
+        t = threading.Thread(target=crop_and_save_images, args=(k, min(k + 1000, 9990), 10))
         t.start()
         threads.append(t)
-        k += 500
+        k += 1000
 
     for t in threads:
         t.join()
