@@ -13,46 +13,38 @@ import random
 NEW_MODEL = True
 LOOP = True
 
-origin = 'file:///home/ida/.keras/datasets/cat10-dataset.zip'
-fname = 'cat10-dataset'
+origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
+fname = 'cat_faces'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 28
-IMG_HEIGHT = 28
+IMG_WIDTH = 640
+IMG_HEIGHT = 480
+BATCH_SIZE = 50
 
 
 def exit_handler():
     model.save('model_cat_classifier.h5')
 
 
-def load_images(a=False, a_len=9993):
-    if a:
-        data_dir = tf.keras.utils.get_file(
-            origin=origin,
-            fname=fname, untar=True)
-        data_dir = pathlib.Path(data_dir)
+def load_images(start, end):
+    data_dir = tf.keras.utils.get_file(
+        origin=origin,
+        fname=fname, untar=True)
+    data_dir = pathlib.Path(data_dir)
 
-        images = []
-        for file in list(data_dir.glob('*.jpg'))[0:a_len]:
-            img = load_img(file.as_posix(), color_mode="grayscale", target_size=(IMG_WIDTH, IMG_HEIGHT))
-            img = np.array(img)
-            img = img.reshape((IMG_WIDTH, IMG_HEIGHT, -1))
-            img = img / 255.0
-            images.append(img)
+    images = []
+    for file in list(data_dir.glob('*.jpg'))[start:end]:
+        img = load_img(file.as_posix(), color_mode="rgb", target_size=(IMG_WIDTH, IMG_HEIGHT))
+        img = np.array(img)
+        img = img.reshape((IMG_WIDTH, IMG_HEIGHT, 3))
+        img = img / 255.0
+        images.append(img)
 
-        return np.array(images)
-    else:
-        (x_train, y_train), (x_test, y_test) = mnist.load_data()
-
-        x_train = np.array(x_train)
-        x_train = x_train.reshape((-1, IMG_WIDTH, IMG_HEIGHT, 1))
-        x_train = x_train / 255.0
-
-        return x_train
+    return np.array(images)
 
 
 def make_prediction(model, img):
-    img = np.reshape(img, [1, IMG_WIDTH, IMG_HEIGHT, 1])
+    img = np.reshape(img, [1, IMG_WIDTH, IMG_HEIGHT, 3])
 
     output = model.predict(img)
 
@@ -61,7 +53,7 @@ def make_prediction(model, img):
     output *= 255
 
     pil_img = Image.fromarray(output)
-    pil_img.show()
+    # pil_img.show()
 
 
 def main():
@@ -69,33 +61,33 @@ def main():
 
     if NEW_MODEL or (not os.path.isfile('model_cat_classifier.h5')):
         model = keras.Sequential([
-            keras.layers.Conv2D(10, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 1],
+            keras.layers.Conv2D(8, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
                                 data_format='channels_last', padding='same', activation=keras.activations.relu),
             keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
-            keras.layers.Conv2D(50, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            keras.layers.Conv2D(16, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
             keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
-            keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            keras.layers.Conv2D(32, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
             keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
-            keras.layers.Conv2D(200, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            keras.layers.Conv2D(64, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
-            keras.layers.Reshape([4 * 4 * 200]),
-            keras.layers.Dense(4 * 4),
-            keras.layers.Dense(4 * 4 * 200),
-            keras.layers.Reshape([4, 4, 200]),
+            keras.layers.Reshape([80 * 60 * 64]),
+            #keras.layers.Dense(4 * 4),
+            #keras.layers.Dense(4 * 4 * 200),
+            keras.layers.Reshape([80, 60, 64]),
 
-            keras.layers.Conv2D(100, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-
-            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-            keras.layers.Conv2D(50, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            keras.layers.Conv2D(32, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-            keras.layers.Conv2D(10, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+            keras.layers.Conv2D(16, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-            keras.layers.Conv2D(1, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu)
+            keras.layers.Conv2D(8, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+
+            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
+            keras.layers.Conv2D(3, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu)
 
         ])
     else:
@@ -104,28 +96,32 @@ def main():
 
     print(model.summary())
 
-    data = load_images()
-
     model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
                   loss=keras.losses.mean_absolute_error,
                   optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
-    history_all = []
+    history_all_loss = []
+    history_all_validation_loss = []
+    img_idx = 0
     while True:
-        history = model.fit(data, data, batch_size=50, epochs=1, shuffle=True)
+        data = load_images(img_idx, img_idx + BATCH_SIZE)
+
+        history = model.fit(data, data, batch_size=BATCH_SIZE, epochs=1, shuffle=True, validation_split=0.1)
         model.save('model_cat_classifier.h5')
 
-        history_all = np.concatenate((history_all, history.history['loss']))
+        history_all_loss = np.concatenate((history_all_loss, history.history['loss']))
+        history_all_validation_loss = np.concatenate((history_all_validation_loss, history.history['val_loss']))
 
         # Plot training & validation loss values
-        plt.plot(np.ravel(history_all))
+        plt.plot(np.ravel(history_all_loss))
+        plt.plot(np.ravel(history_all_validation_loss))
         plt.title('Model loss')
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
-        plt.legend(['Train'], loc='upper left')
-        # plt.show()
+        plt.legend(['Train', 'Validation'], loc='upper left')
+        plt.show()
 
-        #make_prediction(model, data[random.randint(0, len(data) - 1)])
+        img_idx += BATCH_SIZE
 
         if not LOOP:
             break
