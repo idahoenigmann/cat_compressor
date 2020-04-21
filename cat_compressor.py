@@ -20,6 +20,7 @@ model = keras.models.Sequential()
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
 BATCH_SIZE = 50
+EPOCHS = 1
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -116,15 +117,25 @@ def main():
 
     print("found {} files".format(cnt_files))
 
-    img_generator = keras.preprocessing.image.ImageDataGenerator(rescale=1./255, validation_split=0.1)
-    data_generator = img_generator.flow_from_directory(directory=data_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
+    train_dir = os.path.join(data_dir, 'train')
+    validation_dir = os.path.join(data_dir, 'validation')
+
+    print(train_dir)
+    print(validation_dir)
+
+    img_generator = keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
+    train_data_gen = img_generator.flow_from_directory(directory=train_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
                                                        batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
+
+    val_data_gen = img_generator.flow_from_directory(directory=validation_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
+                                                     batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
 
     history_all_loss = []
     history_all_validation_loss = []
     img_idx = 0
     while True:
-        history = model.fit(data_generator, epochs=1)
+        history = model.fit(train_data_gen, steps_per_epoch=10, epochs=EPOCHS,
+                            validation_data=val_data_gen, validation_steps=10)
         model.save('model_cat_classifier.h5')
 
         history_all_loss = np.concatenate((history_all_loss, history.history['loss']))
