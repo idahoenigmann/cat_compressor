@@ -100,13 +100,26 @@ def main():
                   loss=keras.losses.mean_absolute_error,
                   optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
+    data_dir = tf.keras.utils.get_file(
+        origin=origin,
+        fname=fname, untar=True)
+    data_dir = pathlib.Path(data_dir)
+
+    print(data_dir)
+
+    cnt_files = len(list(data_dir.glob('*.jpg')))
+
+    print("found {} files".format(cnt_files))
+
+    img_generator = keras.preprocessing.image.ImageDataGenerator(rescale=1./255, validation_split=0.1)
+    data_generator = img_generator.flow_from_directory(directory=data_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
+                                                       batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
+
     history_all_loss = []
     history_all_validation_loss = []
     img_idx = 0
     while True:
-        data = load_images(img_idx, img_idx + BATCH_SIZE)
-
-        history = model.fit(data, data, batch_size=BATCH_SIZE, epochs=1, shuffle=True, validation_split=0.1)
+        history = model.fit(data_generator, epochs=1)
         model.save('model_cat_classifier.h5')
 
         history_all_loss = np.concatenate((history_all_loss, history.history['loss']))
