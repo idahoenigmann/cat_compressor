@@ -19,7 +19,7 @@ model = keras.models.Sequential()
 
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
-BATCH_SIZE = 50
+BATCH_SIZE = 1
 EPOCHS = 1
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
@@ -136,9 +136,12 @@ def main():
 
     history_all_loss = []
     history_all_validation_loss = []
+
+    callback = keras.callbacks.ModelCheckpoint("model_cat_classifier.h5", period=1)
+
     while True:
         history = model.fit(train_data_gen, steps_per_epoch=10, epochs=EPOCHS,
-                            validation_data=val_data_gen, validation_steps=10)
+                            validation_data=val_data_gen, validation_steps=10, callbacks=[callback])
         model.save('model_cat_classifier.h5')
 
         history_all_loss = np.concatenate((history_all_loss, history.history['loss']))
