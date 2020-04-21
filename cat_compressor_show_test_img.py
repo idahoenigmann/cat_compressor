@@ -12,9 +12,9 @@ if __name__ == '__main__':
         model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
                       loss=keras.losses.mean_absolute_percentage_error,
                       optimizer=keras.optimizers.SGD())
-        data = load_images()
+        data = load_images(9, 100)
         for img_idx in range(0, 100):
-            input_img = np.reshape(data[img_idx], [1, IMG_WIDTH, IMG_HEIGHT, 1])
+            input_img = np.reshape(data[img_idx], [1, IMG_WIDTH, IMG_HEIGHT, 3])
             output_img = model.predict(input_img)
             output_img = np.reshape(output_img[0], [IMG_WIDTH, IMG_HEIGHT])
             output_img *= 255

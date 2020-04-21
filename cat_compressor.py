@@ -13,7 +13,7 @@ import random
 NEW_MODEL = True
 LOOP = True
 
-origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
+origin = 'file:///home/sascha/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 model = keras.models.Sequential()
 
@@ -38,8 +38,12 @@ def load_images(start, end):
         fname=fname, untar=True)
     data_dir = pathlib.Path(data_dir)
 
+    validation_dir = data_dir.joinpath('validation/validation')
+
+    #validation_dir = os.path.join(data_dir, 'validation')
+
     images = []
-    for file in list(data_dir.glob('*.jpg'))[start:end]:
+    for file in list(validation_dir.glob('*.jpg'))[start:end]:
         img = load_img(file.as_posix(), color_mode="rgb", target_size=(IMG_WIDTH, IMG_HEIGHT))
         img = np.array(img)
         img = img.reshape((IMG_WIDTH, IMG_HEIGHT, 3))
@@ -132,7 +136,6 @@ def main():
 
     history_all_loss = []
     history_all_validation_loss = []
-    img_idx = 0
     while True:
         history = model.fit(train_data_gen, steps_per_epoch=10, epochs=EPOCHS,
                             validation_data=val_data_gen, validation_steps=10)
@@ -140,7 +143,7 @@ def main():
 
         history_all_loss = np.concatenate((history_all_loss, history.history['loss']))
         history_all_validation_loss = np.concatenate((history_all_validation_loss, history.history['val_loss']))
-
+        """
         # Plot training & validation loss values
         plt.plot(np.ravel(history_all_loss))
         plt.plot(np.ravel(history_all_validation_loss))
@@ -148,9 +151,7 @@ def main():
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Validation'], loc='upper left')
-        plt.show()
-
-        img_idx += BATCH_SIZE
+        plt.show()"""
 
         if not LOOP:
             break
