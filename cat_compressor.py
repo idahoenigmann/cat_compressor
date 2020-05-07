@@ -36,7 +36,7 @@ def main():
         keras.layers.Conv2D(64, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
         keras.layers.Reshape([80 * 60 * 64]),
-        keras.layers.Dense(300),
+        keras.layers.Dense(300, activation=keras.activations.sigmoid),
     ])
 
     for layer_idx in range(len(model.layers)):
