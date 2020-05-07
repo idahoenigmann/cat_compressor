@@ -9,7 +9,7 @@ model = keras.models.Sequential()
 
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
-BATCH_SIZE = 3
+BATCH_SIZE = 5
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True

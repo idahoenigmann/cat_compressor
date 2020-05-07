@@ -3,6 +3,7 @@ import keras
 import pathlib
 import os.path
 import numpy as np
+from PIL import Image
 
 origin = 'file:///home/sascha/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
@@ -10,7 +11,7 @@ model = keras.models.Sequential()
 
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
-BATCH_SIZE = 3
+BATCH_SIZE = 5
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -55,7 +56,18 @@ def main():
     val_data_gen = img_generator.flow_from_directory(directory=val_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
                                                      batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
 
-    results = model.predict(val_data_gen, steps=1)
+    images = val_data_gen.next()
+    images = images[0]
+    print(images[0].shape)
+
+    for image in images:
+        output_img = np.reshape(np.copy(image), [IMG_WIDTH, IMG_HEIGHT, 3])
+        output_img *= 255
+
+        pil_output_img = Image.fromarray(np.uint8(output_img))
+        pil_output_img.show()
+
+    results = model.predict(images, steps=1)
 
     np.savetxt('data.csv', results, delimiter=',')
 
