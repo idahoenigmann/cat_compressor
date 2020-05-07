@@ -9,7 +9,7 @@ model = keras.models.Sequential()
 
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
-BATCH_SIZE = 5
+BATCH_SIZE = 1
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -46,16 +46,16 @@ def main():
     data = np.loadtxt('data.csv', delimiter=',')
     data = data.reshape([BATCH_SIZE, 300])
 
+    for i in range(0, 10):
+        data[0][0] = i / 10.0
+        results = model.predict(data, steps=1)
 
+        for image in results:
+            output_img = np.reshape(image, [IMG_WIDTH, IMG_HEIGHT, 3])
+            output_img *= 255
 
-    results = model.predict(data, steps=1)
-
-    for image in results:
-        output_img = np.reshape(image, [IMG_WIDTH, IMG_HEIGHT, 3])
-        output_img *= 255
-
-        pil_output_img = Image.fromarray(np.uint8(output_img))
-        pil_output_img.show()
+            pil_output_img = Image.fromarray(np.uint8(output_img))
+            pil_output_img.show()
 
 
 if __name__ == '__main__':
