@@ -46,17 +46,28 @@ def main():
     data = np.loadtxt('data.csv', delimiter=',')
     data = data.reshape([BATCH_SIZE, 300])
 
+    original_img = model.predict(data, steps=1)
+    image_diffs = []
+
     for i in range(0, 10):
-        data[0][0] = i / 10.0
+        data[0][5] = i / 10.0
         results = model.predict(data, steps=1)
 
-        for image in results:
-            output_img = np.reshape(image, [IMG_WIDTH, IMG_HEIGHT, 3])
-            output_img *= 255
+        result_img = np.reshape(np.copy(results[0]), [IMG_WIDTH, IMG_HEIGHT, 3])
+        result_img *= 255
 
-            pil_output_img = Image.fromarray(np.uint8(output_img))
-            pil_output_img.show()
+        pil_result_img = Image.fromarray(np.uint8(result_img))
+        pil_result_img.show()
 
+        image_diffs.append(np.array(original_img) - np.array(results[0]))
+
+    diff_img = np.mean(np.array(image_diffs), axis=0)
+
+    diff_img = np.reshape(diff_img, [IMG_WIDTH, IMG_HEIGHT, 3])
+    diff_img *= 255
+
+    pil_diff_img = Image.fromarray(np.uint8(diff_img))
+    pil_diff_img.show()
 
 if __name__ == '__main__':
     main()
