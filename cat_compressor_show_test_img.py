@@ -1,7 +1,7 @@
 import keras
 from PIL import Image
 import numpy as np
-from cat_compressor import IMG_WIDTH, IMG_HEIGHT
+from cat_nn import IMG_WIDTH, IMG_HEIGHT
 import tensorflow as tf
 import pathlib
 from keras.preprocessing.image import load_img

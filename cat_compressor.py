@@ -4,9 +4,6 @@ import pathlib
 import atexit
 import os.path
 
-NEW_MODEL = False
-LOOP = True
-
 origin = 'file:///home/sascha/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 model = keras.models.Sequential()
@@ -22,47 +19,29 @@ session = tf.compat.v1.Session(config=config)
 tf.compat.v1.keras.backend.set_session(session)
 
 
-def exit_handler():
-    model.save('model_cat_classifier.h5')
-
-
 def main():
-    global model
+    entire_model = keras.models.load_model("model_cat_classifier.h5")
 
-    if NEW_MODEL or (not os.path.isfile('model_cat_classifier.h5')):
-        model = keras.Sequential([
-            keras.layers.Conv2D(8, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
-                                data_format='channels_last', padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(pool_size=2, padding='same'),
+    for layer in entire_model.layers:
+        print(layer.get_config(), layer.get_weights())
 
-            keras.layers.Conv2D(16, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(pool_size=2, padding='same'),
+    return
+    model = keras.Sequential([
+        keras.layers.Conv2D(8, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
+                            data_format='channels_last', padding='same', activation=keras.activations.relu),
+        keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
-            keras.layers.Conv2D(32, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-            keras.layers.MaxPool2D(pool_size=2, padding='same'),
+        keras.layers.Conv2D(16, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+        keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
-            keras.layers.Conv2D(64, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+        keras.layers.Conv2D(32, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
+        keras.layers.MaxPool2D(pool_size=2, padding='same'),
 
-            keras.layers.Reshape([80 * 60 * 64]),
-            keras.layers.Dense(300),
-            keras.layers.Dense(80 * 60 * 64),
-            keras.layers.Reshape([80, 60, 64]),
+        keras.layers.Conv2D(64, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
 
-            keras.layers.Conv2D(32, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-
-            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-            keras.layers.Conv2D(16, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-
-            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-            keras.layers.Conv2D(8, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-
-            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-            keras.layers.Conv2D(3, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu)
-
-        ])
-    else:
-        print("Using trained model 'model_cat_classifier.h5'!")
-        model = keras.models.load_model('model_cat_classifier.h5')
+        keras.layers.Reshape([80 * 60 * 64]),
+        keras.layers.Dense(300),
+    ])
 
     print(model.summary())
 
@@ -84,14 +63,6 @@ def main():
     train_data_gen = img_generator.flow_from_directory(directory=train_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
                                                        batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
 
-    while True:
-        model.fit(train_data_gen, steps_per_epoch=cnt_files // BATCH_SIZE, epochs=EPOCHS)
-        model.save('model_cat_classifier.h5')
-
-        if not LOOP:
-            break
-
 
 if __name__ == '__main__':
-    atexit.register(exit_handler)
     main()
