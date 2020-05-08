@@ -23,19 +23,16 @@ def calc_pca():
     entire_model = keras.models.load_model("model_cat_classifier.h5")
 
     model = keras.Sequential([
-        keras.layers.Conv2D(8, kernel_size=3, strides=1, input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
+        keras.layers.Conv2D(8, kernel_size=3, strides=(2, 2), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
                             data_format='channels_last', padding='same', activation=keras.activations.relu),
-        keras.layers.MaxPool2D(pool_size=2, padding='same'),
+        keras.layers.Conv2D(16, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+                            data_format='channels_last'),
+        keras.layers.Conv2D(32, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+                            data_format='channels_last'),
+        keras.layers.Conv2D(64, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+                            data_format='channels_last'),
 
-        keras.layers.Conv2D(16, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-        keras.layers.MaxPool2D(pool_size=2, padding='same'),
-
-        keras.layers.Conv2D(32, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-        keras.layers.MaxPool2D(pool_size=2, padding='same'),
-
-        keras.layers.Conv2D(64, kernel_size=3, strides=1, padding='same', activation=keras.activations.relu),
-
-        keras.layers.Reshape([80 * 60 * 64]),
+        keras.layers.Reshape([40 * 30 * 64]),
         keras.layers.Dense(300, activation=keras.activations.sigmoid),
     ])
 
