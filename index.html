@@ -10,9 +10,10 @@
 <div id="inner_form">
 </div>
     <div>
-        <input type="button" onclick="parseTrainCat()" value="get train cat">
-        <input type="button" onclick="parseValCat()" value="get validation cat">
+        <input type="button" onclick="parseCat('train')" value="get train cat">
+        <input type="button" onclick="parseCat('val')" value="get validation cat">
         <input type="button" onclick="averageCat()" value="average cat">
+        <input type="button" onclick="inverse()" value="inverse cat">
     </div>
 </div>
 <div id="image_div">
@@ -71,21 +72,8 @@
         })
     }
     
-    function parseValCat() {
-        fetch(encodeURI('http://localhost:3000?parseCat=val')).then(async response => {
-            const arr_str = await response.text();
-            console.log(arr_str);
-            const arr = arr_str.split(",");
-            for (let i = 0; i < arr.length; i++) {
-                document.getElementById('input_' + i).value = arr[i];
-                document.getElementById('output_' + i).value = parseFloat(arr[i]).toFixed(2);
-            }
-            submit();
-        })
-    }
-
-    function parseTrainCat() {
-        fetch(encodeURI('http://localhost:3000?parseCat=train')).then(async response => {
+    function parseCat(source) {
+        fetch(encodeURI('http://localhost:3000?parseCat=' + source)).then(async response => {
             const arr_str = await response.text();
             console.log(arr_str);
             const arr = arr_str.split(",");
@@ -105,8 +93,17 @@
         submit();
     }
 
+    function inverse() {
+        for (let i = 0; i < numElements; i++) {
+            const value = document.getElementById('input_' + i).value * -1
+            document.getElementById('input_' + i).value = value;
+            document.getElementById('output_' + i).value = value.toFixed(2);
+        }
+        submit();
+    }
+
     createForm();
-    parseValCat();
+    parseCat("val");
     submit();
 </script>
 </html>
