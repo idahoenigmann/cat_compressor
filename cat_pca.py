@@ -2,8 +2,7 @@ import tensorflow as tf
 import keras
 import pathlib
 import os.path
-import numpy as np
-from PIL import Image
+from sklearn.decomposition import PCA
 import pickle
 
 origin = 'file:///home/sascha/.keras/datasets/cat_faces.zip'
@@ -20,7 +19,7 @@ session = tf.compat.v1.Session(config=config)
 tf.compat.v1.keras.backend.set_session(session)
 
 
-def main():
+def calc_pca():
     entire_model = keras.models.load_model("model_cat_classifier.h5")
 
     model = keras.Sequential([
@@ -52,33 +51,24 @@ def main():
         fname=fname, untar=True)
     data_dir = pathlib.Path(data_dir)
 
-    val_dir = os.path.join(data_dir, 'validation')
+    train_dir = os.path.join(data_dir, 'train')
     img_generator = keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
-    val_data_gen = img_generator.flow_from_directory(directory=val_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
-                                                     batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
+    train_data_gen = img_generator.flow_from_directory(directory=train_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
+                                                       batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
 
-    images = val_data_gen.next()
-    images = images[0]
-    print(images[0].shape)
+    train_dir_path = pathlib.Path(os.path.join(train_dir, 'train'))
+    cnt_files = len(list(train_dir_path.glob('*.jpg')))
 
-    for image in images:
-        output_img = np.reshape(np.copy(image), [IMG_WIDTH, IMG_HEIGHT, 3])
-        output_img *= 255
+    results = model.predict(train_data_gen, steps=cnt_files // BATCH_SIZE)
 
-        pil_output_img = Image.fromarray(np.uint8(output_img))
-        pil_output_img.show()
+    pca = PCA(n_components=100)
+    pca.fit(results)
 
-    results = model.predict(images, steps=1)
+    with open("pca.txt", "wb") as f:
+        pickle.dump(pca, f)
 
-    with open("pca.txt", "rb") as f:
-        pca = pickle.load(f)
-    principle_components = pca.transform(results)
-
-    np.savetxt('data.csv', principle_components, delimiter=',')
-
-    for result in results:
-        print(result)
+    return pca
 
 
 if __name__ == '__main__':
-    main()
+    calc_pca()

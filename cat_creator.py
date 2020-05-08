@@ -5,6 +5,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+import pickle
 
 hostName = "localhost"
 serverPort = 3000
@@ -82,8 +83,13 @@ def get_image(parameters):
     for i in range(len(parameters)):
         data[i] = parameters[i]
 
-    data = data.reshape([1, 300])
-    img = model.predict(data, steps=1)
+    with open("pca.txt", "rb") as f:
+        pca = pickle.load(f)
+
+    all_components = pca.inverse_transform(data)
+    all_components = all_components.reshape([1, 300])
+
+    img = model.predict(all_components, steps=1)
     img = np.reshape(img, [IMG_WIDTH, IMG_HEIGHT, 3])
     img *= 255.0
     pil_img = Image.fromarray(np.uint8(img))

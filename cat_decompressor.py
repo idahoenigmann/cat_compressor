@@ -2,6 +2,7 @@ import tensorflow as tf
 import keras
 import numpy as np
 from PIL import Image
+import pickle
 
 origin = 'file:///home/sascha/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
@@ -9,7 +10,7 @@ model = keras.models.Sequential()
 
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
-BATCH_SIZE = 1
+BATCH_SIZE = 5
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -44,8 +45,14 @@ def main():
                   optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
     data = np.loadtxt('data.csv', delimiter=',')
-    data = data.reshape([BATCH_SIZE, 300])
-    results = model.predict(data, steps=1)
+
+    with open("pca.txt", "rb") as f:
+        pca = pickle.load(f)
+
+    all_components = pca.inverse_transform(data)
+    all_components = all_components.reshape([BATCH_SIZE, 300])
+
+    results = model.predict(all_components, steps=1)
 
     for image in results:
         output_img = np.reshape(image, [IMG_WIDTH, IMG_HEIGHT, 3])
