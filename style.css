@@ -1,0 +1,15 @@
+#image_div {
+    margin-top: 10%;
+    margin-right: 10%;
+    float: right;
+}
+
+#form {
+    margin-top: 10%;
+    margin-left: 10%;
+    float: left;
+    height: 644px;
+    width: 480px;
+    overflow-y: auto;
+
+}

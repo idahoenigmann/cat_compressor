@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cat generator</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="form">
+</div>
+<div id="image_div">
+    <img id="image">
+</div>
+</body>
+<script>
+    const numElements = 300;
+
+    function createForm() {
+        for (let i = 0; i < numElements; i++) {
+            const output = document.createElement('output');
+            output.name = 'output_' + i;
+            output.id = 'output_' + i;
+            output.value = 0.5.toString();
+
+            const input = document.createElement('input');
+            input.id = 'input_' + i.toString();
+            input.type = 'range';
+            input.name = 'input_' + i.toString();
+            input.min = 0.0.toString();
+            input.max = 1.0.toString();
+            input.step = 0.1.toString();
+            input.value = 0.5.toString();
+            input.oninput = (ev) => {
+                output.value = input.value;
+                submit();
+            }
+
+            const div = document.createElement('div');
+            div.append(input);
+            div.append(output);
+            div.append(document.createElement('br'));
+            document.getElementById("form").append(div);
+        }
+    }
+
+    function submit() {
+        const arr = [];
+
+        for (let i = 0; i < numElements; i++) {
+            const val = parseFloat(document.getElementById('input_' + i).value);
+            arr.push(val)
+        }
+
+        console.log(JSON.stringify(arr))
+
+        fetch(encodeURI('http://localhost:3000?value=' + JSON.stringify(arr))).then(async response => {
+            var image = new Image();
+            image.id = "image"
+            image.src = 'data:image/png;base64,' + await response.text();
+            document.getElementById("image").replaceWith(image);
+        })
+    }
+    
+    function parseCat() {
+        fetch(encodeURI('http://localhost:3000?parseCat=True')).then(async response => {
+            const arr_str = await response.text();
+            console.log(arr_str);
+            const arr = arr_str.split(",");
+            for (let i = 0; i < arr.length; i++) {
+                document.getElementById('input_' + i).value = arr[i];
+                document.getElementById('output_' + i).value = arr[i];
+            }
+            submit();
+        })
+    }
+
+    createForm();
+    parseCat();
+</script>
+</html>
