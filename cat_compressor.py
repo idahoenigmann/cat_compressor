@@ -12,7 +12,8 @@ model = keras.models.Sequential()
 
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
-BATCH_SIZE = 5
+BATCH_SIZE = 1
+SHOW_IMG = False
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -20,7 +21,7 @@ session = tf.compat.v1.Session(config=config)
 tf.compat.v1.keras.backend.set_session(session)
 
 
-def main():
+def compress(source="val"):
     entire_model = keras.models.load_model("model_cat_classifier.h5")
 
     model = keras.Sequential([
@@ -52,21 +53,25 @@ def main():
         fname=fname, untar=True)
     data_dir = pathlib.Path(data_dir)
 
-    val_dir = os.path.join(data_dir, 'validation')
+    val_dir = None
+    if source == "val":
+        val_dir = os.path.join(data_dir, 'validation')
+    elif source == "train":
+        val_dir = os.path.join(data_dir, 'train')
     img_generator = keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
     val_data_gen = img_generator.flow_from_directory(directory=val_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
                                                      batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
 
     images = val_data_gen.next()
     images = images[0]
-    print(images[0].shape)
 
-    for image in images:
-        output_img = np.reshape(np.copy(image), [IMG_WIDTH, IMG_HEIGHT, 3])
-        output_img *= 255
+    if SHOW_IMG:
+        for image in images:
+            output_img = np.reshape(np.copy(image), [IMG_WIDTH, IMG_HEIGHT, 3])
+            output_img *= 255
 
-        pil_output_img = Image.fromarray(np.uint8(output_img))
-        pil_output_img.show()
+            pil_output_img = Image.fromarray(np.uint8(output_img))
+            pil_output_img.show()
 
     results = model.predict(images, steps=1)
 
@@ -76,9 +81,6 @@ def main():
 
     np.savetxt('data.csv', principle_components, delimiter=',')
 
-    for result in results:
-        print(result)
-
 
 if __name__ == '__main__':
-    main()
+    compress()

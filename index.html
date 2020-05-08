@@ -7,10 +7,18 @@
 </head>
 <body>
 <div id="form">
+<div id="inner_form">
+</div>
+    <div>
+        <input type="button" onclick="parseTrainCat()" value="get train cat">
+        <input type="button" onclick="parseValCat()" value="get validation cat">
+        <input type="button" onclick="averageCat()" value="average cat">
+    </div>
 </div>
 <div id="image_div">
     <img id="image">
 </div>
+
 </body>
 <script>
     const numElements = 100;
@@ -20,7 +28,7 @@
             const output = document.createElement('output');
             output.name = 'output_' + i;
             output.id = 'output_' + i;
-            output.value = 0.5.toString();
+            output.value = 0.0.toFixed(2);
             output.style.marginRight = "30px";
             output.style.marginLeft = "10px";
 
@@ -28,12 +36,12 @@
             input.id = 'input_' + i.toString();
             input.type = 'range';
             input.name = 'input_' + i.toString();
-            input.min = 0.0.toString();
+            input.min = (-1.0).toString();
             input.max = 1.0.toString();
             input.step = 0.1.toString();
-            input.value = 0.5.toString();
+            input.value = 0.0.toString();
             input.oninput = (ev) => {
-                output.value = input.value;
+                output.value = parseFloat(input.value).toFixed(2);
                 submit();
             }
 
@@ -41,7 +49,7 @@
             div.classList.add("form_div");
             div.append(input);
             div.append(output);
-            document.getElementById("form").append(div);
+            document.getElementById("inner_form").append(div);
         }
     }
 
@@ -63,21 +71,42 @@
         })
     }
     
-    function parseCat() {
-        fetch(encodeURI('http://localhost:3000?parseCat=True')).then(async response => {
+    function parseValCat() {
+        fetch(encodeURI('http://localhost:3000?parseCat=val')).then(async response => {
             const arr_str = await response.text();
             console.log(arr_str);
             const arr = arr_str.split(",");
             for (let i = 0; i < arr.length; i++) {
                 document.getElementById('input_' + i).value = arr[i];
-                document.getElementById('output_' + i).value = arr[i];
+                document.getElementById('output_' + i).value = parseFloat(arr[i]).toFixed(2);
             }
             submit();
         })
     }
 
+    function parseTrainCat() {
+        fetch(encodeURI('http://localhost:3000?parseCat=train')).then(async response => {
+            const arr_str = await response.text();
+            console.log(arr_str);
+            const arr = arr_str.split(",");
+            for (let i = 0; i < arr.length; i++) {
+                document.getElementById('input_' + i).value = arr[i];
+                document.getElementById('output_' + i).value = parseFloat(arr[i]).toFixed(2);
+            }
+            submit();
+        })
+    }
+
+    function averageCat() {
+        for (let i = 0; i < numElements; i++) {
+            document.getElementById('input_' + i).value = 0.0;
+            document.getElementById('output_' + i).value = 0.0.toFixed(2);
+        }
+        submit();
+    }
+
     createForm();
-    parseCat();
+    parseValCat();
     submit();
 </script>
 </html>

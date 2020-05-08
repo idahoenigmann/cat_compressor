@@ -6,6 +6,7 @@ from io import BytesIO
 from PIL import Image
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import pickle
+from cat_compressor import compress
 
 hostName = "localhost"
 serverPort = 3000
@@ -29,13 +30,16 @@ class MyServer(SimpleHTTPRequestHandler):
         SimpleHTTPRequestHandler.end_headers(self)
 
     def do_GET(self):
-        if "parseCat=True" in self.path:
+        if "parseCat=" in self.path:
+            if "parseCat=val" in self.path:
+                compress("val")
+            elif "parseCat=train" in self.path:
+                compress("train")
             data = np.loadtxt('data.csv', delimiter=',')
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(bytes(','.join("{:.2f}".format(x) for x in data), "utf-8"))
-
         else:
             path = self.path.split("=")[-1].replace("%5B", "").replace("%5D", "")
             parameters = []

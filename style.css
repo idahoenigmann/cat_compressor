@@ -4,15 +4,20 @@
     float: right;
 }
 
+#inner_form {
+    height: 590px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
 #form {
     margin-top: 10%;
     margin-left: 10%;
     float: left;
     height: 644px;
     width: 850px;
-    overflow-y: auto;
-    display: flex;
-    flex-wrap: wrap;
 }
 
 .form-div {
