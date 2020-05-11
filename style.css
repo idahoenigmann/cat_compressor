@@ -1,7 +1,15 @@
-#image_div {
-    margin-top: 10%;
-    margin-right: 10%;
-    float: right;
+body {
+    background: #BDBDBD;
+}
+
+#b {
+    margin: 5% auto;
+    padding: 2%;
+    width: 1350px;
+    height: 640px;
+    display: block;
+    text-align: center;
+    background: #FFFFFF;
 }
 
 #inner_form {
@@ -13,13 +21,14 @@
 }
 
 #form {
-    margin-top: 10%;
-    margin-left: 10%;
     float: left;
     height: 644px;
-    width: 850px;
+    width: 780px;
 }
 
-.form-div {
-    margin-right: 10px;
+#image_div {
+    float: right;
+    border: black 1px solid;
+    width: 480px;
+    height: 640px;
 }

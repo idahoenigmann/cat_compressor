@@ -20,16 +20,16 @@ tf.compat.v1.keras.backend.set_session(session)
 
 
 def calc_pca():
-    entire_model = keras.models.load_model("model_cat_classifier.h5")
+    entire_model = keras.models.load_model("model_cat_nn.h5")
 
     model = keras.Sequential([
-        keras.layers.Conv2D(8, kernel_size=3, strides=(2, 2), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
+        keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
                             data_format='channels_last', padding='same', activation=keras.activations.relu),
-        keras.layers.Conv2D(16, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+        keras.layers.Conv2D(16, kernel_size=4, strides=(2, 2), padding='same', activation=keras.activations.relu,
                             data_format='channels_last'),
-        keras.layers.Conv2D(32, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+        keras.layers.Conv2D(32, kernel_size=4, strides=(2, 2), padding='same', activation=keras.activations.relu,
                             data_format='channels_last'),
-        keras.layers.Conv2D(64, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+        keras.layers.Conv2D(64, kernel_size=4, strides=(4, 4), padding='same', activation=keras.activations.relu,
                             data_format='channels_last'),
 
         keras.layers.Reshape([40 * 30 * 64]),
@@ -39,8 +39,8 @@ def calc_pca():
     for layer_idx in range(len(model.layers)):
         model.layers[layer_idx].set_weights(entire_model.layers[layer_idx].get_weights())
 
-    model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
-                  loss=keras.losses.mean_absolute_error,
+    model.compile(metrics=[keras.metrics.mean_absolute_error],
+                  loss=keras.losses.mean_squared_error,
                   optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
     data_dir = tf.keras.utils.get_file(
@@ -58,8 +58,12 @@ def calc_pca():
 
     results = model.predict(train_data_gen, steps=cnt_files // BATCH_SIZE)
 
+    print("all image data calculated")
+
     pca = PCA(n_components=100)
     pca.fit(results)
+
+    print("pca finished")
 
     with open("pca.txt", "wb") as f:
         pickle.dump(pca, f)

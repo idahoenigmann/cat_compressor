@@ -13,7 +13,7 @@ model = keras.models.Sequential()
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
 BATCH_SIZE = 1
-SHOW_IMG = False
+SHOW_IMG = True
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -22,16 +22,16 @@ tf.compat.v1.keras.backend.set_session(session)
 
 
 def compress(source="val"):
-    entire_model = keras.models.load_model("model_cat_classifier.h5")
+    entire_model = keras.models.load_model("model_cat_nn.h5")
 
     model = keras.Sequential([
-        keras.layers.Conv2D(8, kernel_size=3, strides=(2, 2), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
+        keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
                             data_format='channels_last', padding='same', activation=keras.activations.relu),
-        keras.layers.Conv2D(16, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+        keras.layers.Conv2D(16, kernel_size=4, strides=(2, 2), padding='same', activation=keras.activations.relu,
                             data_format='channels_last'),
-        keras.layers.Conv2D(32, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+        keras.layers.Conv2D(32, kernel_size=4, strides=(2, 2), padding='same', activation=keras.activations.relu,
                             data_format='channels_last'),
-        keras.layers.Conv2D(64, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+        keras.layers.Conv2D(64, kernel_size=4, strides=(4, 4), padding='same', activation=keras.activations.relu,
                             data_format='channels_last'),
 
         keras.layers.Reshape([40 * 30 * 64]),
@@ -41,8 +41,8 @@ def compress(source="val"):
     for layer_idx in range(len(model.layers)):
         model.layers[layer_idx].set_weights(entire_model.layers[layer_idx].get_weights())
 
-    model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
-                  loss=keras.losses.mean_absolute_error,
+    model.compile(metrics=[keras.metrics.mean_absolute_error],
+                  loss=keras.losses.mean_squared_error,
                   optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
     data_dir = tf.keras.utils.get_file(

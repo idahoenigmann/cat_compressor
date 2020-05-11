@@ -6,6 +6,7 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
+<div id="b">
 <div id="form">
 <div id="inner_form">
 </div>
@@ -19,7 +20,7 @@
 <div id="image_div">
     <img id="image">
 </div>
-
+</div>
 </body>
 <script>
     const numElements = 100;
@@ -30,7 +31,7 @@
             output.name = 'output_' + i;
             output.id = 'output_' + i;
             output.value = 0.0.toFixed(2);
-            output.style.marginRight = "30px";
+            output.style.marginRight = "40px";
             output.style.marginLeft = "10px";
 
             const input = document.createElement('input');

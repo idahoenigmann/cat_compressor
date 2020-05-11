@@ -13,7 +13,7 @@ model = keras.models.Sequential()
 
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
-BATCH_SIZE = 100
+BATCH_SIZE = 1
 EPOCHS = 1
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
@@ -31,13 +31,13 @@ def main():
 
     if NEW_MODEL or (not os.path.isfile('model_cat_nn.h5')):
         model = keras.Sequential([
-            keras.layers.Conv2D(8, kernel_size=3, strides=(2, 2), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
+            keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
                                 data_format='channels_last', padding='same', activation=keras.activations.relu),
-            keras.layers.Conv2D(16, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+            keras.layers.Conv2D(16, kernel_size=4, strides=(2, 2), padding='same', activation=keras.activations.relu,
                                 data_format='channels_last'),
-            keras.layers.Conv2D(32, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+            keras.layers.Conv2D(32, kernel_size=4, strides=(2, 2), padding='same', activation=keras.activations.relu,
                                 data_format='channels_last'),
-            keras.layers.Conv2D(64, kernel_size=3, strides=(2, 2), padding='same', activation=keras.activations.relu,
+            keras.layers.Conv2D(64, kernel_size=4, strides=(4, 4), padding='same', activation=keras.activations.relu,
                                 data_format='channels_last'),
 
             keras.layers.Reshape([40 * 30 * 64]),
@@ -45,14 +45,15 @@ def main():
             keras.layers.Dense(40 * 30 * 64),
             keras.layers.Reshape([40, 30, 64]),
 
-            keras.layers.Conv2DTranspose(32, kernel_size=3, strides=(2, 2), padding='same', output_padding=(1, 1),
-                                         data_format='channels_last', activation=keras.activations.relu),
-            keras.layers.Conv2DTranspose(16, kernel_size=3, strides=(2, 2), padding='same', output_padding=(1, 1),
-                                         data_format='channels_last', activation=keras.activations.relu),
-            keras.layers.Conv2DTranspose(8, kernel_size=3, strides=(2, 2), padding='same', output_padding=(1, 1),
-                                         data_format='channels_last', activation=keras.activations.relu),
-            keras.layers.Conv2DTranspose(3, kernel_size=3, strides=(2, 2), padding='same', output_padding=(1, 1),
-                                         data_format='channels_last', activation=keras.activations.relu)
+            keras.layers.UpSampling2D(size=(4, 4), data_format='channels_last'),
+            keras.layers.Conv2D(32, kernel_size=4, strides=(1, 1), padding='same', activation=keras.activations.relu),
+            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
+            keras.layers.Conv2D(16, kernel_size=4, strides=(1, 1), padding='same', activation=keras.activations.relu),
+            keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
+            keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), padding='same', activation=keras.activations.relu),
+
+            keras.layers.Conv2D(3, kernel_size=4, strides=(1, 1), padding='same', activation=keras.activations.relu),
+
         ])
     else:
         print("Using trained model 'model_cat_nn.h5'!")
@@ -60,8 +61,8 @@ def main():
 
     print(model.summary())
 
-    model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
-                  loss=keras.losses.mean_absolute_error,
+    model.compile(metrics=[keras.metrics.mean_absolute_error],
+                  loss=keras.losses.mean_squared_error,
                   optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
     data_dir = tf.keras.utils.get_file(
