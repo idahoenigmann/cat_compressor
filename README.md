@@ -7,9 +7,11 @@ be done using images of cats.
 ### getting this project to run on your machine
 ... is quite difficult.
 
-Anyhow, you will want to get the cat images from <link missing> and move them to your
-~/.keras/datasets directory. There is a somewhat pretrained nn weight and biases set available 
-[here](https://drive.google.com/drive/folders/1K58Dt07-jXyqFFZDlCrxCmVxdoDTbXZe?usp=sharing). Move these files into the cat_compressor directory.
+Anyhow, you will want to get all the data and the pretrained model from 
+[here](https://drive.google.com/drive/folders/1K58Dt07-jXyqFFZDlCrxCmVxdoDTbXZe?usp=sharing). 
+Move the cat images to your ~/.keras/datasets directory. There is a 
+somewhat pretrained nn weight and biases that you should move into the 
+cat_compressor directory.
 
 Get the following python modules:
 
