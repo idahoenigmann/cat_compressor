@@ -11,7 +11,7 @@ from cat_compressor import compress
 hostName = "localhost"
 serverPort = 3000
 
-origin = 'file:///home/sascha/.keras/datasets/cat_faces.zip'
+origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 model = keras.models.Sequential()
 
@@ -77,7 +77,7 @@ def main():
 
     model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
                   loss=keras.losses.mean_absolute_error,
-                  optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
+                  optimizer=tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
 
 def get_image(parameters):

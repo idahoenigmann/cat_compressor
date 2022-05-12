@@ -41,7 +41,7 @@ def calc_pca():
 
     model.compile(metrics=[keras.metrics.mean_absolute_error],
                   loss=keras.losses.mean_squared_error,
-                  optimizer=keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
+                  optimizer=tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
 
     data_dir = tf.keras.utils.get_file(
         origin=origin,

@@ -6,7 +6,7 @@ import tensorflow as tf
 import pathlib
 from keras.preprocessing.image import load_img
 
-origin = 'file:///home/sascha/.keras/datasets/cat_faces.zip'
+origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
         model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],
                       loss=keras.losses.mean_absolute_percentage_error,
-                      optimizer=keras.optimizers.SGD())
+                      optimizer=tf.keras.optimizers.SGD())
         data = load_images(0, 1)
         for img_idx in range(0, len(data)):
             input_img = np.reshape(data[img_idx], [1, IMG_WIDTH, IMG_HEIGHT, 3])
