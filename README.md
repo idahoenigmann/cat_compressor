@@ -4,18 +4,19 @@ hourglass" shape of the neural network, we hope to be able to produce new images
 feeding some (random?) data into the middle of the neural network. Btw everything will
 be done using images of cats.
 
-### current plan
+### getting this project to run on your machine
+... is quite difficult.
 
-1. build a cat detector
-2. build a cat cropper
-3. build a cat compressor
-4. build a cat generator
+Anyhow, you will want to get the cat images from <link missing> and move them to your
+~/.keras/datasets directory. There is a somewhat pretrained nn weight and biases set available
+at <link missing>.
 
-### additional things needed
+Get the following python modules:
 
-* lots of images of cats
-* losts of images of stuff that is not a cat
-* python script for cropping cat faces out of images containing cats
-* a better plan
-* motivation to write a good readme.md
-* more knowledge about neural networks
+* tensorflow and keras
+* pillow
+* pickle
+
+Run python cat_creator.py.
+
+Open index.html with a web browser.
