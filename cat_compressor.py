@@ -6,8 +6,8 @@ import numpy as np
 from PIL import Image
 import pickle
 
-origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
-fname = 'cat_faces'
+origin = 'file:///home/ida/.keras/datasets/simple_shapes.zip'
+fname = 'simple_shapes'
 model = keras.models.Sequential()
 
 IMG_WIDTH = 640
@@ -22,7 +22,7 @@ tf.compat.v1.keras.backend.set_session(session)
 
 
 def compress(source="val"):
-    entire_model = keras.models.load_model("model_cat_nn.h5")
+    entire_model = keras.models.load_model("simple_shapes.h5")
 
     model = keras.Sequential([
         keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],

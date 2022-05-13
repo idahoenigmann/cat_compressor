@@ -11,8 +11,8 @@ from cat_compressor import compress
 hostName = "localhost"
 serverPort = 3000
 
-origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
-fname = 'cat_faces'
+origin = 'file:///home/ida/.keras/datasets/simple_shapes.zip'
+fname = 'simple_shapes'
 model = keras.models.Sequential()
 
 IMG_WIDTH = 640
@@ -55,7 +55,7 @@ class MyServer(SimpleHTTPRequestHandler):
 def main():
     global model
 
-    entire_model = keras.models.load_model("model_cat_nn.h5")
+    entire_model = keras.models.load_model("simple_shapes.h5")
 
     model = keras.Sequential([
         keras.layers.Dense(40 * 30 * 64, input_shape=[300]),

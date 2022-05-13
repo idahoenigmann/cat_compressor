@@ -12,8 +12,8 @@ from scipy import ndimage, misc
 import threading
 
 
-origin = 'file:///home/ida/.keras/datasets/cat-dataset.zip'
-fname = 'cat-dataset'
+origin = 'file:///home/ida/.keras/datasets/simple_shapes.zip'
+fname = 'simple_shapes'
 
 IMG_HEIGHT = 0
 IMG_WIDTH = 0
@@ -60,7 +60,7 @@ def plot_image(image, name=""):
         plt.axis('off')
         plt.tight_layout()
         if name != "":
-            plt.savefig("/home/ida/.keras/datasets/cat_faces/{}".format(name))
+            plt.savefig("/home/ida/.keras/datasets/simple_shapes/{}".format(name))
         else:
             plt.show()
         plt.clf()

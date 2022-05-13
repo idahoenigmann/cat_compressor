@@ -7,8 +7,8 @@ import os.path
 NEW_MODEL = False
 LOOP = True
 
-origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
-fname = 'cat_faces'
+origin = 'file:///home/ida/.keras/datasets/simple_shapes.zip'
+fname = 'simple_shapes'
 model = keras.models.Sequential()
 
 IMG_WIDTH = 640
@@ -23,13 +23,13 @@ tf.compat.v1.keras.backend.set_session(session)
 
 
 def exit_handler():
-    model.save('model_cat_nn.h5')
+    model.save('simple_shapes.h5')
 
 
 def main():
     global model
 
-    if NEW_MODEL or (not os.path.isfile('model_cat_nn.h5')):
+    if NEW_MODEL or (not os.path.isfile('simple_shapes.h5')):
         model = keras.Sequential([
             keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
                                 data_format='channels_last', padding='same', activation=keras.activations.relu),
@@ -56,14 +56,15 @@ def main():
 
         ])
     else:
-        print("Using trained model 'model_cat_nn.h5'!")
-        model = keras.models.load_model('model_cat_nn.h5')
+        print("Using trained model 'simple_shapes.h5'!")
+        model = keras.models.load_model('simple_shapes.h5')
 
     print(model.summary())
 
     model.compile(metrics=[keras.metrics.mean_absolute_error],
                   loss=keras.losses.mean_squared_error,
-                  optimizer=tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
+                  optimizer=tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True),
+                  run_eagerly=True)
 
     data_dir = tf.keras.utils.get_file(
         origin=origin,
@@ -73,7 +74,7 @@ def main():
     train_dir = os.path.join(data_dir, 'train')
 
     train_dir_path = pathlib.Path(os.path.join(train_dir, 'train'))
-    cnt_files = len(list(train_dir_path.glob('*.jpg')))
+    cnt_files = len(list(train_dir_path.glob('*.png')))
 
     img_generator = keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
     train_data_gen = img_generator.flow_from_directory(directory=train_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
@@ -81,7 +82,7 @@ def main():
 
     while True:
         model.fit(train_data_gen, steps_per_epoch=cnt_files // BATCH_SIZE, epochs=EPOCHS)
-        model.save('model_cat_nn.h5')
+        model.save('simple_shapes.h5')
 
         if not LOOP:
             break

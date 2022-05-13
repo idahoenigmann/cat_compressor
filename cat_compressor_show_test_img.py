@@ -6,8 +6,8 @@ import tensorflow as tf
 import pathlib
 from keras.preprocessing.image import load_img
 
-origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
-fname = 'cat_faces'
+origin = 'file:///home/ida/.keras/datasets/simple_shapes.zip'
+fname = 'simple_shapes'
 
 
 def load_images(start, end):
@@ -45,7 +45,7 @@ def make_prediction(model, img):
 
 
 if __name__ == '__main__':
-        model = keras.models.load_model('model_cat_classifier.h5')
+        model = keras.models.load_model('simple_shapes_classifier.h5')
         print(model.summary())
 
         model.compile(metrics=[keras.metrics.mean_absolute_percentage_error],

@@ -5,8 +5,8 @@ import os.path
 from sklearn.decomposition import PCA
 import pickle
 
-origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
-fname = 'cat_faces'
+origin = 'file:///home/ida/.keras/datasets/simple_shapes.zip'
+fname = 'simple_shapes'
 model = keras.models.Sequential()
 
 IMG_WIDTH = 640
@@ -20,7 +20,7 @@ tf.compat.v1.keras.backend.set_session(session)
 
 
 def calc_pca():
-    entire_model = keras.models.load_model("model_cat_nn.h5")
+    entire_model = keras.models.load_model("simple_shapes.h5")
 
     model = keras.Sequential([
         keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
@@ -54,13 +54,13 @@ def calc_pca():
                                                        batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
 
     train_dir_path = pathlib.Path(os.path.join(train_dir, 'train'))
-    cnt_files = len(list(train_dir_path.glob('*.jpg')))
+    cnt_files = len(list(train_dir_path.glob('*.png')))
 
     results = model.predict(train_data_gen, steps=cnt_files // BATCH_SIZE)
 
     print("all image data calculated")
 
-    pca = PCA(n_components=100)
+    pca = PCA(n_components=30)
     pca.fit(results)
 
     print("pca finished")
