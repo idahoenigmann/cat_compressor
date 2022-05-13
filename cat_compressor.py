@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 import pickle
 
-origin = 'file:///home/sascha/.keras/datasets/cat_faces.zip'
+origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 model = keras.models.Sequential()
 

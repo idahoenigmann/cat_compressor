@@ -18,6 +18,8 @@ Get the following python modules:
 * tensorflow and keras
 * pillow
 * pickle
+* scipy
+* sklearn
 
 Run python cat_creator.py.
 
