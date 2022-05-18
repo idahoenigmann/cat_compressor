@@ -6,14 +6,15 @@ import numpy as np
 from PIL import Image
 import pickle
 
-origin = 'file:///home/ida/.keras/datasets/simple_shapes.zip'
-fname = 'simple_shapes'
+origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
+fname = 'cat_faces'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 640
-IMG_HEIGHT = 480
+IMG_WIDTH = 320
+IMG_HEIGHT = 240
 BATCH_SIZE = 1
 SHOW_IMG = True
+REDUCED_SIZE = 128
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -22,20 +23,20 @@ tf.compat.v1.keras.backend.set_session(session)
 
 
 def compress(source="val"):
-    entire_model = keras.models.load_model("simple_shapes.h5")
+    entire_model = keras.models.load_model("cat_faces.h5")
 
     model = keras.Sequential([
-        keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), input_shape=[IMG_WIDTH, IMG_HEIGHT, 3],
-                            data_format='channels_last', padding='same', activation=keras.activations.relu),
-        keras.layers.Conv2D(16, kernel_size=4, strides=(2, 2), padding='same', activation=keras.activations.relu,
-                            data_format='channels_last'),
-        keras.layers.Conv2D(32, kernel_size=4, strides=(2, 2), padding='same', activation=keras.activations.relu,
-                            data_format='channels_last'),
-        keras.layers.Conv2D(64, kernel_size=4, strides=(4, 4), padding='same', activation=keras.activations.relu,
-                            data_format='channels_last'),
+        keras.layers.InputLayer(input_shape=[IMG_WIDTH, IMG_HEIGHT, 3], name="input_1"),
+        keras.layers.Conv2D(8, kernel_size=3, strides=(1, 1),
+                            data_format='channels_last', padding='same', activation=keras.activations.relu,
+                            name="compress_1"),
+        keras.layers.Conv2D(16, kernel_size=5, strides=(2, 2), padding='same', activation=keras.activations.relu,
+                            data_format='channels_last', name="compress_2"),
+        keras.layers.Conv2D(32, kernel_size=10, strides=(5, 5), padding='same', activation=keras.activations.relu,
+                            data_format='channels_last', name="compress_3d"),
 
-        keras.layers.Reshape([40 * 30 * 64]),
-        keras.layers.Dense(300, activation=keras.activations.sigmoid),
+        keras.layers.Reshape([32 * 24 * 32], name="compress_5"),
+        keras.layers.Dense(128, activation=keras.activations.sigmoid, name="compress_6"),
     ])
 
     for layer_idx in range(len(model.layers)):

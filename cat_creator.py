@@ -11,12 +11,14 @@ from cat_compressor import compress
 hostName = "localhost"
 serverPort = 3000
 
-origin = 'file:///home/ida/.keras/datasets/simple_shapes.zip'
-fname = 'simple_shapes'
+origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
+fname = 'cat_faces'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 640
-IMG_HEIGHT = 480
+IMG_WIDTH = 320
+IMG_HEIGHT = 240
+
+REDUCED_SIZE = 128
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -55,20 +57,21 @@ class MyServer(SimpleHTTPRequestHandler):
 def main():
     global model
 
-    entire_model = keras.models.load_model("simple_shapes.h5")
+    entire_model = keras.models.load_model("cat_faces.h5")
 
     model = keras.Sequential([
-        keras.layers.Dense(40 * 30 * 64, input_shape=[300]),
-        keras.layers.Reshape([40, 30, 64]),
+        keras.layers.Dense(32 * 24 * 32, input_shape=(128,), name="decompress_1"),
+        keras.layers.Reshape([32, 24, 32], name="decompress_2"),
 
-        keras.layers.UpSampling2D(size=(4, 4), data_format='channels_last'),
-        keras.layers.Conv2D(32, kernel_size=4, strides=(1, 1), padding='same', activation=keras.activations.relu),
-        keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-        keras.layers.Conv2D(16, kernel_size=4, strides=(1, 1), padding='same', activation=keras.activations.relu),
-        keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last'),
-        keras.layers.Conv2D(8, kernel_size=4, strides=(1, 1), padding='same', activation=keras.activations.relu),
-
-        keras.layers.Conv2D(3, kernel_size=4, strides=(1, 1), padding='same', activation=keras.activations.relu),
+        keras.layers.UpSampling2D(size=(5, 5), data_format='channels_last', name="decompress_3"),
+        keras.layers.Conv2D(16, kernel_size=5, strides=(2, 2), padding='same', activation=keras.activations.relu,
+                            name="decompress_4"),
+        keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last', name="decompress_5"),
+        keras.layers.Conv2D(8, kernel_size=3, strides=(1, 1), padding='same', activation=keras.activations.relu,
+                            name="decompress_6"),
+        keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last', name="decompress_7"),
+        keras.layers.Conv2D(3, kernel_size=3, strides=(1, 1), padding='same', activation=keras.activations.relu,
+                            name="decompress_8"),
     ])
 
     #for layer_idx in range(len(entire_model.layers) - len(model.layers), len(entire_model.layers)):
@@ -90,7 +93,7 @@ def get_image(parameters):
         pca = pickle.load(f)
 
     all_components = pca.inverse_transform(data)
-    all_components = all_components.reshape([1, 300])
+    all_components = all_components.reshape([1, REDUCED_SIZE])
 
     img = model.predict(all_components, steps=1)
     img = np.reshape(img, [IMG_WIDTH, IMG_HEIGHT, 3])
