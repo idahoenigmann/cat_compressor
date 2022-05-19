@@ -15,4 +15,4 @@ def main(path, new_size):
 
 
 if __name__ == "__main__":
-    main("/home/ida/.keras/datasets/cat_faces/validation/validation/", (320, 240))
+    main("/home/ida/.keras/datasets/cat_faces/train/train/", (320, 240))
