@@ -11,8 +11,7 @@ origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 320
-IMG_HEIGHT = 240
+IMG_WIDTH, IMG_HEIGHT = 160, 120
 BATCH_SIZE = 1
 EPOCHS = 1
 REDUCED_SIZE = 128
@@ -41,10 +40,10 @@ def main():
             keras.layers.Conv2D(32, kernel_size=10, strides=(5, 5), padding='same', activation=keras.activations.relu,
                                 data_format='channels_last', name="compress_3d"),
 
-            keras.layers.Reshape([32 * 24 * 32], name="compress_5"),
+            keras.layers.Reshape([16 * 12 * 32], name="compress_5"),
             keras.layers.Dense(128, activation=keras.activations.sigmoid, name="compress_6"),
-            keras.layers.Dense(32 * 24 * 32, name="decompress_1"),
-            keras.layers.Reshape([32, 24, 32], name="decompress_2"),
+            keras.layers.Dense(16 * 12 * 32, name="decompress_1"),
+            keras.layers.Reshape([16, 12, 32], name="decompress_2"),
 
             keras.layers.UpSampling2D(size=(5, 5), data_format='channels_last', name="decompress_3"),
             keras.layers.Conv2D(16, kernel_size=5, strides=(2, 2), padding='same', activation=keras.activations.relu,
@@ -55,7 +54,6 @@ def main():
             keras.layers.UpSampling2D(size=(2, 2), data_format='channels_last', name="decompress_7"),
             keras.layers.Conv2D(3, kernel_size=3, strides=(1, 1), padding='same', activation=keras.activations.relu,
                                 name="decompress_8"),
-
         ])
     else:
         print("Using trained model 'cat_faces.h5'!")

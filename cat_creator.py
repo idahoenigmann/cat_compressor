@@ -15,8 +15,7 @@ origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 320
-IMG_HEIGHT = 240
+IMG_WIDTH, IMG_HEIGHT = 160, 120
 
 REDUCED_SIZE = 128
 
@@ -60,8 +59,9 @@ def main():
     entire_model = keras.models.load_model("cat_faces.h5")
 
     model = keras.Sequential([
-        keras.layers.Dense(32 * 24 * 32, input_shape=(128,), name="decompress_1"),
-        keras.layers.Reshape([32, 24, 32], name="decompress_2"),
+        keras.layers.InputLayer(input_shape=[REDUCED_SIZE], name="input_2"),
+        keras.layers.Dense(16 * 12 * 32, name="decompress_1"),
+        keras.layers.Reshape([16, 12, 32], name="decompress_2"),
 
         keras.layers.UpSampling2D(size=(5, 5), data_format='channels_last', name="decompress_3"),
         keras.layers.Conv2D(16, kernel_size=5, strides=(2, 2), padding='same', activation=keras.activations.relu,

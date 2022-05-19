@@ -10,8 +10,7 @@ origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 320
-IMG_HEIGHT = 240
+IMG_WIDTH, IMG_HEIGHT = 160, 120
 BATCH_SIZE = 1
 SHOW_IMG = True
 REDUCED_SIZE = 128
@@ -35,7 +34,7 @@ def compress(source="val"):
         keras.layers.Conv2D(32, kernel_size=10, strides=(5, 5), padding='same', activation=keras.activations.relu,
                             data_format='channels_last', name="compress_3d"),
 
-        keras.layers.Reshape([32 * 24 * 32], name="compress_5"),
+        keras.layers.Reshape([16 * 12 * 32], name="compress_5"),
         keras.layers.Dense(128, activation=keras.activations.sigmoid, name="compress_6"),
     ])
 

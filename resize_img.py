@@ -10,9 +10,9 @@ def main(path, new_size):
             print(path + file)
             im = Image.open(path+file)
             new_im = im.resize(new_size, Image.ANTIALIAS)
-            new_im = new_im.convert('L')
+            # new_im = new_im.convert('L')
             new_im.save(path+file, 'JPEG', quality=90)
 
 
 if __name__ == "__main__":
-    main("/home/ida/.keras/datasets/cat_faces/train/train/", (320, 240))
+    main("/home/ida/.keras/datasets/cat_faces/validation/validation/", (160, 120))

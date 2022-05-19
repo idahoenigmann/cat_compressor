@@ -9,11 +9,10 @@ origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
 fname = 'cat_faces'
 model = keras.models.Sequential()
 
-IMG_WIDTH = 320
-IMG_HEIGHT = 240
+IMG_WIDTH, IMG_HEIGHT = 160, 120
 BATCH_SIZE = 1
 REDUCED_SIZE = 128
-PCA_SIZE = 30
+PCA_SIZE = 10
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
 config.gpu_options.allow_growth = True
@@ -34,7 +33,7 @@ def calc_pca():
         keras.layers.Conv2D(32, kernel_size=10, strides=(5, 5), padding='same', activation=keras.activations.relu,
                             data_format='channels_last', name="compress_3d"),
 
-        keras.layers.Reshape([32 * 24 * 32], name="compress_5"),
+        keras.layers.Reshape([16 * 12 * 32], name="compress_5"),
         keras.layers.Dense(128, activation=keras.activations.sigmoid, name="compress_6"),
     ])
 
