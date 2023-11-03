@@ -1,76 +1,82 @@
-import tensorflow as tf
-import keras
 import pathlib
 import os.path
+from PIL import Image
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import numpy as np
 from sklearn.decomposition import PCA
-import pickle
+import time
+import cv2
 
-origin = 'file:///home/ida/.keras/datasets/cat_faces.zip'
+TRAIN_DIR = '/home/ida/.keras/datasets/cat_faces/train/train/'
+VAL_DIR = '/home/ida/.keras/datasets/cat_faces/validation/validation/'
 fname = 'cat_faces'
-model = keras.models.Sequential()
-
-IMG_WIDTH, IMG_HEIGHT = 160, 120
-BATCH_SIZE = 1
-REDUCED_SIZE = 128
-PCA_SIZE = 10
-
-config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8))
-config.gpu_options.allow_growth = True
-session = tf.compat.v1.Session(config=config)
-tf.compat.v1.keras.backend.set_session(session)
+PCA_SIZE = 478
+CNT_TRAIN_IMG = len([name for name in os.listdir(TRAIN_DIR) if name.endswith('.jpg')])
+CNT_VAL_IMG = len([name for name in os.listdir(VAL_DIR) if name.endswith('.jpg')])
+IMG_WIDTH = 64
+IMG_HEIGHT = 64
 
 
-def calc_pca():
-    entire_model = keras.models.load_model("cat_faces.h5")
+def get_data(dir):
+    data = []
+    for file_name in os.listdir(dir):
+        if not (os.path.isfile(os.path.join(dir, file_name)) and file_name.endswith('.jpg')):
+            continue
+        path = os.path.join(dir, file_name)
 
-    model = keras.Sequential([
-        keras.layers.InputLayer(input_shape=[IMG_WIDTH, IMG_HEIGHT, 3], name="input_1"),
-        keras.layers.Conv2D(8, kernel_size=3, strides=(1, 1),
-                            data_format='channels_last', padding='same', activation=keras.activations.relu,
-                            name="compress_1"),
-        keras.layers.Conv2D(16, kernel_size=5, strides=(2, 2), padding='same', activation=keras.activations.relu,
-                            data_format='channels_last', name="compress_2"),
-        keras.layers.Conv2D(32, kernel_size=10, strides=(5, 5), padding='same', activation=keras.activations.relu,
-                            data_format='channels_last', name="compress_3d"),
-
-        keras.layers.Reshape([16 * 12 * 32], name="compress_5"),
-        keras.layers.Dense(128, activation=keras.activations.sigmoid, name="compress_6"),
-    ])
-
-    for layer_idx in range(len(model.layers)):
-        model.layers[layer_idx].set_weights(entire_model.layers[layer_idx].get_weights())
-
-    model.compile(metrics=[keras.metrics.mean_absolute_error],
-                  loss=keras.losses.mean_squared_error,
-                  optimizer=tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.5, nesterov=True))
-
-    data_dir = tf.keras.utils.get_file(
-        origin=origin,
-        fname=fname, untar=True)
-    data_dir = pathlib.Path(data_dir)
-
-    train_dir = os.path.join(data_dir, 'train')
-    img_generator = keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
-    train_data_gen = img_generator.flow_from_directory(directory=train_dir, target_size=(IMG_WIDTH, IMG_HEIGHT),
-                                                       batch_size=BATCH_SIZE, class_mode="input", shuffle=True)
-
-    train_dir_path = pathlib.Path(os.path.join(train_dir, 'train'))
-    cnt_files = len(list(train_dir_path.glob('*.jpg')))
-
-    results = model.predict(train_data_gen, steps=cnt_files // BATCH_SIZE)
-
-    print("all image data calculated")
-
-    pca = PCA(n_components=PCA_SIZE)
-    pca.fit(results)
-
-    print("pca finished")
-
-    with open("pca.txt", "wb") as f:
-        pickle.dump(pca, f)
-
-    return pca
+        img = mpimg.imread(path)
+        img = cv2.resize(img, dsize=(IMG_WIDTH, IMG_HEIGHT))
+        data.append(img)
+    return data
 
 
 if __name__ == '__main__':
-    calc_pca()
+    matplotlib.use('TkAgg')
+
+    print(f"found {CNT_TRAIN_IMG} training images")
+    print(f"found {CNT_VAL_IMG} validation images")
+
+    # initialize arrays
+    reconstructed_data = []
+    train_data = get_data(TRAIN_DIR)
+    val_data = get_data(VAL_DIR)
+
+    # flatten matrix
+    train_data = np.reshape(train_data, [CNT_TRAIN_IMG, IMG_WIDTH * IMG_HEIGHT])
+    val_data = np.reshape(val_data, [CNT_VAL_IMG, IMG_WIDTH * IMG_HEIGHT])
+
+    pca = PCA(n_components=PCA_SIZE)
+    pca.fit(train_data)
+
+    compressed_data = pca.transform(val_data)
+
+    """min = np.min(compressed_data)        TODO
+    max = np.max(compressed_data)
+    compressed_data = np.random.random(compressed_data.shape)
+    compressed_data = (max - min) * compressed_data + min"""
+
+    reconstructed_data = pca.inverse_transform(compressed_data).astype(int)
+    reconstructed_data = np.round(reconstructed_data)
+
+    # visualize
+    empty_fig = np.ones([IMG_WIDTH, IMG_HEIGHT])
+    plt.ion()
+    fig, axes = plt.subplots(nrows=2, ncols=1)
+
+    org_img_sp = axes[0].imshow(empty_fig, cmap="grey", vmin=0, vmax=255)
+    new_img_sp = axes[1].imshow(empty_fig, cmap="grey", vmin=0, vmax=255)
+
+    val_data = np.reshape(val_data, [CNT_VAL_IMG, IMG_WIDTH, IMG_HEIGHT])
+    reconstructed_data = np.reshape(reconstructed_data, [CNT_VAL_IMG, IMG_WIDTH, IMG_HEIGHT])
+
+    for i in range(CNT_VAL_IMG):
+        original_img = val_data[i, :, :]
+        reconstructed_img = reconstructed_data[i, :, :]
+
+        org_img_sp.set_data(original_img)
+        new_img_sp.set_data(reconstructed_img)
+
+        plt.draw()
+        plt.pause(1)
