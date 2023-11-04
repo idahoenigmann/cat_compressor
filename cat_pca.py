@@ -8,11 +8,12 @@ import numpy as np
 from sklearn.decomposition import PCA
 import time
 import cv2
+import pickle
 
 TRAIN_DIR = '/home/ida/.keras/datasets/cat_faces/train/train/'
 VAL_DIR = '/home/ida/.keras/datasets/cat_faces/validation/validation/'
 fname = 'cat_faces'
-PCA_SIZE = 478
+PCA_SIZE = 100
 CNT_TRAIN_IMG = len([name for name in os.listdir(TRAIN_DIR) if name.endswith('.jpg')])
 CNT_VAL_IMG = len([name for name in os.listdir(VAL_DIR) if name.endswith('.jpg')])
 IMG_WIDTH = 64
@@ -28,6 +29,7 @@ def get_data(dir):
 
         img = mpimg.imread(path)
         img = cv2.resize(img, dsize=(IMG_WIDTH, IMG_HEIGHT))
+        img = img*(1./255)
         data.append(img)
     return data
 
@@ -50,6 +52,12 @@ if __name__ == '__main__':
     pca = PCA(n_components=PCA_SIZE)
     pca.fit(train_data)
 
+    with open("pca.txt", "wb") as f:
+        pickle.dump(pca, f)
+
+    for i in range(len(pca.explained_variance_ratio_)):
+        print(f"PC{i}:      {pca.explained_variance_ratio_[i] * 100},      {np.sum(pca.explained_variance_ratio_[0:i]) * 100}")
+
     compressed_data = pca.transform(val_data)
 
     """min = np.min(compressed_data)        TODO
@@ -57,8 +65,7 @@ if __name__ == '__main__':
     compressed_data = np.random.random(compressed_data.shape)
     compressed_data = (max - min) * compressed_data + min"""
 
-    reconstructed_data = pca.inverse_transform(compressed_data).astype(int)
-    reconstructed_data = np.round(reconstructed_data)
+    reconstructed_data = pca.inverse_transform(compressed_data)
 
     # visualize
     empty_fig = np.ones([IMG_WIDTH, IMG_HEIGHT])
@@ -75,8 +82,8 @@ if __name__ == '__main__':
         original_img = val_data[i, :, :]
         reconstructed_img = reconstructed_data[i, :, :]
 
-        org_img_sp.set_data(original_img)
-        new_img_sp.set_data(reconstructed_img)
+        org_img_sp.set_data(original_img*255)
+        new_img_sp.set_data(reconstructed_img*255)
 
         plt.draw()
         plt.pause(1)
