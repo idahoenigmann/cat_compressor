@@ -1,6 +1,6 @@
 # cat_compressor
-This projects goal is to compress images using a neural network. By the "fallen over 
-hourglass" shape of the neural network (aka a autoencoder), we hope to be able to
+This project's goal is to compress images using a neural network. By using the "fallen over 
+hourglass" shape of the neural network (aka an autoencoder), we hope to be able to
 produce new images by feeding some (random?) data into the middle of the neural network.
 Btw everything will be done using images of cat faces.
 
